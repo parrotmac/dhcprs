@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 
 use dhcproto::{v4, Encodable, Encoder, Decodable, Decoder};
 use dhcproto::v4::{CLIENT_PORT, DhcpOption, OptionCode, SERVER_PORT};
+
 use pnet::packet::ipv4::{Ipv4Packet, MutableIpv4Packet};
 use pnet::packet::udp::{MutableUdpPacket, UdpPacket};
 use pnet::{datalink};
@@ -133,7 +134,13 @@ fn eth_arp_packet(chaddr: MacAddress, target_ip: Ipv4Addr) -> [u8; ETHERNET_HEAD
     packet
 }
 
-pub fn dhcp_client(interface_name: &str) -> Result<Ipv4Addr> {
+pub struct DhcpClientResult {
+    pub assigned_ip: Ipv4Addr,
+    pub gateways: Option<Vec<Ipv4Addr>>,
+    pub dns_servers: Option<Vec<Ipv4Addr>>,
+}
+
+pub fn dhcp_client(interface_name: &str) -> Result<DhcpClientResult> {
     let interface_names_match =
         |iface: &NetworkInterface| iface.name == interface_name;
     let interfaces = datalink::interfaces();
@@ -261,8 +268,20 @@ pub fn dhcp_client(interface_name: &str) -> Result<Ipv4Addr> {
                                         v4::MessageType::Ack => {
                                             let ack_packet = dhcp_packet;
                                             let your_ip = ack_packet.yiaddr();
+                                            let gateway = match ack_packet.opts().get(OptionCode::Router).unwrap() {
+                                                DhcpOption::Router(gateway) => Some(gateway),
+                                                _ => None,
+                                            };
+                                            let dns_servers = match ack_packet.opts().get(OptionCode::DomainNameServer).unwrap() {
+                                                DhcpOption::DomainNameServer(dns_servers) => Some(dns_servers),
+                                                _ => None,
+                                            };
                                             println!("Received a DHCP Ack for IP: {}", your_ip);
-                                            return Ok(your_ip);
+                                            return Ok(DhcpClientResult {
+                                                assigned_ip: your_ip,
+                                                gateways: gateway.map(|ip| ip.to_owned()),
+                                                dns_servers: dns_servers.map(|ip| ip.to_owned()),
+                                            });
                                         },
                                         _ => {}
                                     }
