@@ -1,6 +1,5 @@
 
 use std::net::Ipv4Addr;
-use std::process::exit;
 use anyhow::{Result};
 
 
@@ -134,7 +133,7 @@ fn eth_arp_packet(chaddr: MacAddress, target_ip: Ipv4Addr) -> [u8; ETHERNET_HEAD
     packet
 }
 
-pub fn dhcp_client(interface_name: &str) -> Result<()> {
+pub fn dhcp_client(interface_name: &str) -> Result<Ipv4Addr> {
     let interface_names_match =
         |iface: &NetworkInterface| iface.name == interface_name;
     let interfaces = datalink::interfaces();
@@ -260,8 +259,10 @@ pub fn dhcp_client(interface_name: &str) -> Result<()> {
 
                                         },
                                         v4::MessageType::Ack => {
-                                            println!("Received a DHCP Ack -- TODO: configure network interface with IP address");
-                                            exit(0);
+                                            let ack_packet = dhcp_packet;
+                                            let your_ip = ack_packet.yiaddr();
+                                            println!("Received a DHCP Ack for IP: {}", your_ip);
+                                            return Ok(your_ip);
                                         },
                                         _ => {}
                                     }
