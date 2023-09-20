@@ -12,7 +12,10 @@ fn main() {
     });
 
     match dhcp_client(interface_name.as_str()) {
-        Ok(response) => println!("Assigned IP: {} via {:?}", response.assigned_ip, response.gateways),
+        Ok(response) => {
+            println!(" - IP Assignment: {} via {:?}", response.assigned_ip, response.gateways);
+            println!(" - DNS Servers: {:?}", response.dns_servers);
+        },
         Err(e) => eprintln!("Error: {}", e),
     }
 }
