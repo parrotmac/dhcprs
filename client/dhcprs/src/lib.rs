@@ -269,16 +269,16 @@ pub fn dhcp_client(interface_name: &str) -> Result<DhcpClientResult> {
                                         v4::MessageType::Ack => {
                                             let ack_packet = dhcp_packet;
                                             let your_ip = ack_packet.yiaddr();
-                                            let gateway = match ack_packet.opts().get(OptionCode::Router).unwrap() {
-                                                DhcpOption::Router(gateway) => Some(gateway),
+                                            let gateway = match ack_packet.opts().get(OptionCode::Router) {
+                                                Some(DhcpOption::Router(gateway)) => Some(gateway),
                                                 _ => None,
                                             };
-                                            let dns_servers = match ack_packet.opts().get(OptionCode::DomainNameServer).unwrap() {
-                                                DhcpOption::DomainNameServer(dns_servers) => Some(dns_servers),
+                                            let dns_servers = match ack_packet.opts().get(OptionCode::DomainNameServer) {
+                                                Some(DhcpOption::DomainNameServer(dns_servers)) => Some(dns_servers),
                                                 _ => None,
                                             };
-                                            let subnet_mask = match ack_packet.opts().get(OptionCode::SubnetMask).unwrap() {
-                                                DhcpOption::SubnetMask(subnet_mask) => Some(subnet_mask),
+                                            let subnet_mask = match ack_packet.opts().get(OptionCode::SubnetMask) {
+                                                Some(DhcpOption::SubnetMask(subnet_mask)) => Some(subnet_mask),
                                                 _ => None,
                                             };
                                             println!("Received a DHCP Ack for IP: {}", your_ip);
