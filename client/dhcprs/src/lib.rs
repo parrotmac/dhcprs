@@ -136,6 +136,7 @@ fn eth_arp_packet(chaddr: MacAddress, target_ip: Ipv4Addr) -> [u8; ETHERNET_HEAD
 
 pub struct DhcpClientResult {
     pub assigned_ip: Ipv4Addr,
+    pub subnet_mask: Option<Ipv4Addr>,
     pub gateways: Option<Vec<Ipv4Addr>>,
     pub dns_servers: Option<Vec<Ipv4Addr>>,
 }
@@ -276,9 +277,14 @@ pub fn dhcp_client(interface_name: &str) -> Result<DhcpClientResult> {
                                                 DhcpOption::DomainNameServer(dns_servers) => Some(dns_servers),
                                                 _ => None,
                                             };
+                                            let subnet_mask = match ack_packet.opts().get(OptionCode::SubnetMask).unwrap() {
+                                                DhcpOption::SubnetMask(subnet_mask) => Some(subnet_mask),
+                                                _ => None,
+                                            };
                                             println!("Received a DHCP Ack for IP: {}", your_ip);
                                             return Ok(DhcpClientResult {
                                                 assigned_ip: your_ip,
+                                                subnet_mask: subnet_mask.map(|ip| ip.to_owned()),
                                                 gateways: gateway.map(|ip| ip.to_owned()),
                                                 dns_servers: dns_servers.map(|ip| ip.to_owned()),
                                             });
