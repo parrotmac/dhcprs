@@ -141,7 +141,7 @@ pub struct DhcpClientResult {
     pub dns_servers: Option<Vec<Ipv4Addr>>,
 }
 
-pub fn dhcp_client(interface_name: &str) -> Result<DhcpClientResult> {
+pub fn dhcp_client(interface_name: &str, hostname: Option<&str>) -> Result<DhcpClientResult> {
     let interface_names_match =
         |iface: &NetworkInterface| iface.name == interface_name;
     let interfaces = datalink::interfaces();
@@ -181,6 +181,10 @@ pub fn dhcp_client(interface_name: &str) -> Result<DhcpClientResult> {
             ]));
         msg.opts_mut()
             .insert(v4::DhcpOption::ClientIdentifier(chaddr.into()));
+        if let Some(hostname) = hostname {
+            msg.opts_mut()
+                .insert(v4::DhcpOption::Hostname(hostname.to_owned()));
+        }
 
         let mut e = Encoder::new(&mut dhcp_request_payload);
         msg.encode(&mut e)?;

@@ -12,7 +12,7 @@ fn main() {
         exit(1);
     });
 
-    match dhcp_client(interface_name.as_str()) {
+    match dhcp_client(interface_name.as_str(), None) {
         Ok(response) => {
             let cidr_suffix = match response.subnet_mask {
                 Some(subnet_mask) => calculate_cidr_suffix(&subnet_mask),
