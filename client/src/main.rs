@@ -16,7 +16,7 @@ fn main() {
         Ok(response) => {
             let cidr_suffix = match response.subnet_mask {
                 Some(subnet_mask) => calculate_cidr_suffix(&subnet_mask),
-                None => 32, // No subnet mask, so assume /32.b
+                None => 32, // No subnet mask, so assume /32
             };
             println!(" - IP Assignment: {}/{} via {:?}", response.assigned_ip, cidr_suffix, response.gateways);
             println!(" - DNS Servers: {:?}", response.dns_servers);
